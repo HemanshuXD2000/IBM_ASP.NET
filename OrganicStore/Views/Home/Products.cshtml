@@ -1,0 +1,158 @@
+﻿@model IEnumerable<OrganicStore.Models.products>
+<title>@ViewBag.Title</title>
+@{
+    ViewBag.Title = "products";
+}
+
+<script>
+    function addToCart(productId) {
+
+        if (typeof (Storage) !== "undefined") {
+            var cart = JSON.parse(sessionStorage.getItem("cart")) || [];
+            var existingProduct = cart.find(item => item.productId === productId);
+            let index = cart.findIndex(item => item.productId === productId);
+
+            if (existingProduct !== undefined) {
+                cart.splice(index, 1);
+                cart.push({
+                    productId: existingProduct.productId,
+                    quantity: existingProduct.quantity + 1
+                })
+                console.log(existingProduct);
+                console.log("old value" + existingProduct.quantity);
+                console.log("new value" + existingProduct.quantity);
+
+            } else {
+                cart.push({
+                    productId: productId,
+                    quantity: 1
+                });
+            }
+            sessionStorage.setItem("cart", JSON.stringify(cart));
+            var cartCounterStorage = JSON.parse(sessionStorage.getItem("cart")) || [];
+            var totalQuantity = 0;
+
+            cartCounterStorage.forEach(function (element) {
+                if (element && typeof element.quantity === 'number') {
+                    totalQuantity += element.quantity;
+                } else {
+                    console.log("Invalid element in cartCounterStorage:", element);
+                }
+            });
+
+            console.log(totalQuantity);
+            updateCartCounter(totalQuantity);
+
+        } else {
+            console.error("Session storage is not supported. Unable to add to cart.");
+        }
+
+    }
+
+    function updateCartCounter(newQuantity) {
+        //alert("Added to cart.");
+        var cartCounter = document.getElementById("cartCounter");
+        cartCounter.innerText = newQuantity;
+    }
+</script>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-body-tertiary text1">
+    <!-- Container wrapper -->
+    <div class="container-fluid">
+        <!-- Toggle button -->
+        <button data-mdb-collapse-init class="navbar-toggler" type="button" data-mdb-target="#navbarCenteredExample"
+                aria-controls="navbarCenteredExample" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Collapsible wrapper -->
+        <div class="collapse navbar-collapse justify-content-center" id="navbarCenteredExample">
+            <!-- Left links -->
+            <ul class="navbar-nav mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active category" aria-current="page" href="#" data-category="fruits">Fruits (10)</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link category" href="#" data-category="vegetables">Vegetables (15)</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link category" href="#" data-category="leafy greens">Leafy Greens (8)</a>
+                </li>
+            </ul>
+        </div>
+        <!-- Collapsible wrapper -->
+    </div>
+    <!-- Container wrapper -->
+</nav>
+<div class="container py-5">
+    <div class="row justify-content-center">
+
+        @foreach (products p in Model)
+        {
+            <div class="col-md-4 col-lg-4 col-xl-4" style="margin-bottom: 20px">
+                <div class="card text-black" data-category="@p.category.ToLower()">
+                    <img src="@Url.Content(@p.img)" class="card-img-top" alt="@p.p_name" height="300px" />
+                    <div class="card-body">
+                        <div class="text-center">
+                            <h5 class="card-title">@p.p_name</h5>
+                            <p class="text-muted mb-4">
+                                @p.details
+                            </p>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between">
+                                <span>Selling Price</span><span>&#8377 @p.s_price.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Original Price</span><span><del>&#8377 @p.o_price.00</del></span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn cart px-auto" onclick="addToCart(@p.id)" data-product-id="@p.id">ADD TO CART</button>
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<a href="#" class="top">Back to Top &#8593;</a>
+
+@section scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var categoryLinks = document.querySelectorAll(".category");
+            // var productsContainer = document.getElementById("productsContainer");
+
+            categoryLinks.forEach(function (link) {
+                link.addEventListener("click", function (event) {
+                    event.preventDefault();
+                    var selectedCategory = link.getAttribute("data-category");
+                    filterProducts(selectedCategory);
+                });
+            });
+
+            function filterProducts(category) {
+                var productItems = document.querySelectorAll(".card[data-category]");
+                productItems.forEach(function (item) {
+                    if (category === "all" || item.getAttribute("data-category").toLowerCase() === category) {
+                        item.style.display = "block";
+                    } else {
+                        item.style.display = "none";
+                    }
+                });
+                // productsContainer.style.display = Array.from(productItems).some(item => item.style.display === "block") ? "block" : "none";
+            }
+        });
+    </script>
+}
+
+
+
+
+
+
+
+
+

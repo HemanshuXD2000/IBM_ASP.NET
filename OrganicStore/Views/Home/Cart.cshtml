@@ -1,0 +1,212 @@
+﻿<!DOCTYPE html>
+<title>@ViewBag.Title</title>
+@{
+    ViewBag.Title = "Cart";
+}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            background-color: #f8f9fa;
+            /* padding: 20px; */
+            font-family: Montserrat-Regular;
+        }
+
+        .cart-table {
+            width: 100%;
+        }
+
+        .cart-item {
+            /* display: flex; */
+            align-items: center;
+        }
+
+            .cart-item img {
+                width: 90px;
+                height: 90px;
+                margin-right: 10px;
+            }
+
+        .remove-btn {
+            color: red;
+            cursor: pointer;
+        }
+
+        .btn{
+            border-radius: 100%;
+        }
+
+        #grand-total {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        @using (Html.BeginForm("SubmitCart", "Cart", FormMethod.Post))
+        {
+        <table class="table cart-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="cart-container"></tbody>
+        </table>
+        <div id="grand-total">Grand Total: &#8377 0.00</div>
+        <button onclick="submitCart()">Submit Cart</button>
+        }
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    @* <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script> *@
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        function submitCart(){
+            // Retrieve cart data from sessionStorage
+            var cart = JSON.parse(sessionStorage.getItem("cart")) || [];
+
+            // Send the cart data to your backend (assuming you have a CartController with a SubmitCart action)
+            fetch('/Cart/SubmitCart',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ cart: cart })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Handle the response from the server if needed
+                    console.log(data);
+                })
+                .catch(error => {
+                    console.error('Error submitting cart:', error);
+                });
+        }
+        const products = JSON.parse(sessionStorage.getItem("cart")) || [];
+
+        // Function to render the shopping cart
+        function renderCart() {
+            let cartData = {
+
+
+                "1": {
+                    "img":" /lib/orange.jpg",
+                    "name":"orange",
+                    "price": 120
+
+                },
+                "2": {
+                    "img": " /lib/apple.jpg",
+                    "name": "apple",
+                    "price": 180
+
+                },
+                "3": {
+                    "img": " /lib/banana.jpg",
+                    "name": "banana",
+                    "price": 25
+
+                },
+                "4": {
+                    "img": " /lib/carrot.jpg",
+                    "name": "carrot",
+                    "price": 65
+
+                },
+                "5": {
+                    "img": " /lib/broccoli.jpg",
+                    "name": "brocoli",
+                    "price": 190
+
+                },
+                "6": {
+                    "img": " /lib/tomato.jpg",
+                    "name": "tomato",
+                    "price": 30
+
+                },
+                "7": {
+                    "img": " /lib/spinach.jpeg",
+                    "name": "spinach",
+                    "price": 80
+
+                },
+                "8": {
+                    "img": " /lib/kale.jpg",
+                    "name": "kale",
+                    "price": 130
+
+                },
+                "9": {
+                    "img": " /lib/lettuce.jpg",
+                    "name": "lettuce",
+                    "price": 230
+
+                },
+            }
+            const cartContainer = document.getElementById('cart-container');
+            cartContainer.innerHTML = '';
+
+            let grandTotal = 0;
+
+            products.forEach(product => {
+                const row = document.createElement('tr');
+                row.classList.add('cart-item');
+                console.log(products);
+                total = cartData[product.productId].price * product.quantity;
+                row.innerHTML = `
+
+                                    <td><img src = "@Url.Content("${cartData[product.productId].img}")" ></td>
+                                    <td>${cartData[product.productId].name}</td>
+                                    <td>${cartData[product.productId].price}</td>
+                                    <td>${product.quantity}</td>
+                                    <td>${total}</td>
+                             
+                    `;
+                cartContainer.appendChild(row);
+                grandTotal += cartData[product.productId].price * product.quantity;
+            });
+            document.getElementById('grand-total').innerText = `Grand Total: ₹ ${grandTotal.toFixed(2)}`;  
+        }
+        
+
+        // Function to update quantity
+        function updateQuantity(productId, quantityChange) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                product.quantity += quantityChange;
+                if (product.quantity < 1) {
+                    product.quantity = 1;
+                }
+                renderCart();
+            }
+        }
+
+        // Function to remove item
+        function removeItem(productId) {
+            const index = products.findIndex(p => p.id === productId);
+            if (index !== -1) {
+                products.splice(index, 1);
+                renderCart();
+            }
+        }
+
+        // Initial rendering
+        renderCart();
+    </script>
+
+</body>
+</html>
